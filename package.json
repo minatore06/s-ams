@@ -18,6 +18,7 @@
   "homepage": "https://github.com/minatore06/s-ams#readme",
   "dependencies": {
     "discord.js": "^13.2.0",
+    "fs": "*",
     "ms": "^2.1.3"
   }
 }
