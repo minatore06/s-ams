@@ -1,0 +1,23 @@
+{
+  "name": "s-ams",
+  "version": "0.0.1",
+  "description": "Bot per l'invio semi-automatizzato di messaggi di sistema e informativa",
+  "main": "bot.js",
+  "scripts": {
+    "test": "node bot.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/minatore06/s-ams.git"
+  },
+  "author": "Mina#3690",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/minatore06/s-ams/issues"
+  },
+  "homepage": "https://github.com/minatore06/s-ams#readme",
+  "dependencies": {
+    "discord.js": "^13.2.0",
+    "ms": "^2.1.3"
+  }
+}
