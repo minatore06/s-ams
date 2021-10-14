@@ -19,60 +19,65 @@ var loop=true;
 var filter;
 
 async function sendPoll(poll, pollID){
-    try {
-        let pollCh = await client.channels.fetch(poll.stanza);
-
-        let row = new MessageActionRow()
-        for (let i = 0; i < poll.risposte.length; i++) {
-            row.addComponents(
-                new MessageButton()
-                    .setCustomId("0|"+pollID.toString()+"|"+i.toString())
-                    .setLabel(poll.risposte[i].nome)
-                    .setStyle('PRIMARY')
-            )
-        }
-        
-        let pollMsg = await pollCh.send({embeds: [poll.embed], components:[row]})
-
-        
-        setTimeout(async ()=>{
-            pollMsg.components[0].components.forEach(btn => {
-                btn.setDisabled(true)
-            });
-            pollMsg.edit({
-                content:"Poll terminato",
-                embeds:[poll.embed],
-                components:pollMsg.components
-            });
-
-            let pollG = await client.guilds.fetch(pollMsg.guildId);
-
-            let pollGuildOwner = await pollG.roles.fetch('739880788857978913');
-
-            let pollResult = "";
-
-            poll.risposte.forEach(risposta =>{
-                pollResult+=risposta.nome+": "+risposta.risposte+"\n";
-            })
-
-            let resultEmb = {
-                title: "Risultato del poll: `"+poll.embed.title+"`",
-                url: pollMsg.url,
-                description: "Risultati:\n"+pollResult,
-                footer: {
-                    text: "Powered by Mina#3690"
-                },
-                timestamp: new Date()
-            };
-
-            pollGuildOwner.members.forEach(owner => {
-                owner.send({embeds:[resultEmb]});
-            });
-        }, ms(poll.durata))
-    } catch (error) {
-        console.log(error)
-        (await client.users.fetch(bOwner)).send("Errore imprevisto\n"+error)
+    let pollCh;
+    try{
+        pollCh = await client.channels.fetch(poll.stanza);
+        if(!pollCh||pollCh.type!="GUILD_TEXT") throw new Error("Stanza non trovata")
+    }catch(err){
+        return err
     }
+
+    let row = new MessageActionRow()
+    for (let i = 0; i < poll.risposte.length; i++) {
+        row.addComponents(
+            new MessageButton()
+                .setCustomId("0|"+pollID.toString()+"|"+i.toString())
+                .setLabel(poll.risposte[i].nome)
+                .setStyle('PRIMARY')
+        )
+    }
+    
+    let pollMsg = await pollCh.send({embeds: [poll.embed], components:[row]}).catch(err=>{
+        return err
+    })
+
+    
+    setTimeout(async ()=>{
+        pollMsg.components[0].components.forEach(btn => {
+            btn.setDisabled(true)
+        });
+        pollMsg.edit({
+            content:"Poll terminato",
+            embeds:[poll.embed],
+            components:pollMsg.components
+        });
+
+        let pollG = await client.guilds.fetch(pollMsg.guildId);
+
+        let pollGuildOwner = await pollG.roles.fetch('874038198316175410');
+
+        let pollResult = "";
+
+        poll.risposte.forEach(risposta =>{
+            pollResult+=risposta.nome+": "+risposta.risposte+"\n";
+        })
+
+        let resultEmb = {
+            title: "Risultato del poll: `"+poll.embed.title+"`",
+            url: pollMsg.url,
+            description: "Risultati:\n"+pollResult,
+            footer: {
+                text: "Powered by Mina#3690"
+            },
+            timestamp: new Date()
+        };
+
+        pollGuildOwner.members.forEach(async owner => {
+            await owner.send({embeds:[resultEmb]}).catch(async err=>{
+                (await client.users.fetch(bOwner)).send(owner.id + " è un coglione e non lo posso dmare")
+            })
+        });
+    }, ms(poll.durata))
 }
 
 client.on('ready', ()=>{
@@ -319,7 +324,11 @@ client.on('messageCreate', async (message) => {
                 break;
 
             case "testPoll":
-                sendPoll(polls["0"], "0")
+                sendPoll(polls["0"], "0").then(err=>{
+                    if(err){
+                        message.channel.send(err.message)
+                    }
+                })
                 break;
 
             case "createPoll"://tempo mess scelte
@@ -338,6 +347,24 @@ client.on('messageCreate', async (message) => {
                 await message.channel.awaitMessages({filter, max: 1, time: 60000, errors: ['time'] })
                 .then(async collected => {
                     embPoll["description"] = collected.first().content
+                }).catch(err => {throw err})
+
+                await message.channel.send("Vuoi aggiungere un immagine?(si|no)")
+                await message.channel.awaitMessages({filter, max: 1, time: 120000, errors: ['time'] })
+                .then(async collected => {
+                    if(collected.first().content.toLowerCase()=="si"){
+                        await message.channel.send("Inserire l'immagine del poll")
+                        await message.channel.awaitMessages({filter, max: 1, time: 120000, errors: ['time'] })
+                        .then(async collected => {
+                            embPoll["image"] = {}
+                            if(!collected.first().attachments.first()){
+                                if(!collected.first().embeds[0]&&!collected.first().embeds[0].url)
+                                    throw new Error("Errore nel ricevimento dell'immagine")
+                                embPoll.image["url"] = collected.first().embeds[0].url
+                            }else
+                                embPoll.image["url"] = collected.first().attachments.first().url
+                        }).catch(err => {throw err})
+                    }
                 }).catch(err => {throw err})
 
                 poll["embed"] = embPoll
@@ -371,6 +398,9 @@ client.on('messageCreate', async (message) => {
                         poll["stanza"] = collected.first().content.slice(2,-1)
                     else
                         poll["stanza"] = collected.first().content
+
+                    let pollCh = await client.channels.fetch(poll["stanza"])
+                    if(!pollCh||pollCh.type!="GUILD_TEXT") throw new Error("Stanza non trovata")
                 }).catch(err => {throw err})
 
                 poll["replied"] = [];
@@ -394,7 +424,6 @@ client.on('messageCreate', async (message) => {
 
 client.on('interactionCreate', interaction => {
 	if (interaction.isButton()){//0 per poll
-        console.log(interaction);
         intIDs = interaction.customId.split('|')
 
         if(intIDs[0]=='0'){

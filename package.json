@@ -1,6 +1,6 @@
 {
   "name": "s-ams",
-  "version": "0.0.1",
+  "version": "0.1.0",
   "description": "Bot per l'invio semi-automatizzato di messaggi di sistema e informativa",
   "main": "bot.js",
   "scripts": {
