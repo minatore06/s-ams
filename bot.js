@@ -115,6 +115,7 @@ client.on('messageCreate', async (message) => {
             
             case "sendEmbed":
                 if(embeds[args[0]]==undefined)throw new Error('Embed non esistente');
+                if(args[0]=="0"&&message.author.id!=bOwner)return;
                 let ch = await client.channels.fetch(args[1]);
                 if(!ch)throw new Error('Canale non trovato')
 
@@ -242,6 +243,7 @@ client.on('messageCreate', async (message) => {
 
             case "sendWebhook"://high priority
                 if(webhooks[args[0]]==undefined)throw new Error('Webhook non esistente');
+                if(args[0]=="0"&&message.author.id!=bOwner)return;
                 let webCh = await client.channels.fetch(args[1])
                 if(!webCh)throw new Error('Canale non trovato')
 
@@ -324,6 +326,7 @@ client.on('messageCreate', async (message) => {
                 break;
 
             case "testPoll":
+                if(message.author.id != bOwner)return;
                 sendPoll(polls["0"], "0").then(err=>{
                     if(err){
                         message.channel.send(err.message)
