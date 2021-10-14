@@ -6,7 +6,7 @@ var polls = require('./polls.json');
 const fs = require('fs');
 const ms = require('ms')
 
-const { Client, MessageAttachment, MessageEmbed, Intents, MessageActionRow, MessageButton } = require('discord.js');
+const { Client, MessageAttachment, MessageEmbed, Intents, MessageActionRow, MessageButton, Permissions } = require('discord.js');
 const client = new Client({intents:[Intents.FLAGS.GUILDS, Intents.FLAGS.GUILD_WEBHOOKS, Intents.FLAGS.GUILD_MESSAGES, Intents.FLAGS.GUILD_MESSAGE_REACTIONS, Intents.FLAGS.GUILD_INTEGRATIONS]});
 //require('discord-buttons')(client)
 //const {MessageButton, MessageActionRow} = require("discord-buttons")
@@ -96,10 +96,12 @@ client.on('messageCreate', async (message) => {
     try {
         switch(cmd){
             case "embed":
+                if(message.author.id!=bOwner)return
                 message.channel.send({embeds:[embeds['0'].embed]})
                 break;
             
             case "showEmbeds":
+                if(!message.member.permissions.has(Permissions.FLAGS.MANAGE_WEBHOOKS))throw new Error("Permesso negato (Gestione dei webhook necessario)")
                 let embList = "```";
                 Object.keys(embeds).forEach(key => {
                     embList+="#"+key+" titolo: "+embeds[key].titolo+"\n";
@@ -109,11 +111,13 @@ client.on('messageCreate', async (message) => {
                 break;
 
             case "showEmbed":
+                if(!message.member.permissions.has(Permissions.FLAGS.MANAGE_WEBHOOKS))throw new Error("Permesso negato (Gestione dei webhook necessario)")
                 if(embeds[args]==undefined)throw new Error('Embed non esistente');
                 message.channel.send({embeds:[embeds[args].embed]})
                 break;
             
             case "sendEmbed":
+                if(!message.member.permissions.has(Permissions.FLAGS.MANAGE_WEBHOOKS))throw new Error("Permesso negato (Gestione dei webhook necessario)")
                 if(embeds[args[0]]==undefined)throw new Error('Embed non esistente');
                 if(args[0]=="0"&&message.author.id!=bOwner)return;
                 let ch = await client.channels.fetch(args[1]);
@@ -123,6 +127,7 @@ client.on('messageCreate', async (message) => {
                 break;
 
             case "createEmbed"://med priority
+                if(!message.member.permissions.has(Permissions.FLAGS.MANAGE_WEBHOOKS))throw new Error("Permesso negato (Gestione dei webhook necessario)")
 //todo immagine/thumbnail
                 let embed={};
                 let titolo = "";
@@ -155,6 +160,24 @@ client.on('messageCreate', async (message) => {
                                     
                                 }).catch(err => {throw err})
                             }while(loop)
+
+                            await message.channel.send("Vuoi aggiungere un immagine?(si|no)")
+                            await message.channel.awaitMessages({filter, max: 1, time: 120000, errors: ['time'] })
+                            .then(async collected => {
+                                if(collected.first().content.toLowerCase()=="si"){
+                                    await message.channel.send("Inserire l'immagine del poll")
+                                    await message.channel.awaitMessages({filter, max: 1, time: 120000, errors: ['time'] })
+                                    .then(async collected => {
+                                        embed["image"] = {}
+                                        if(!collected.first().attachments.first()){
+                                            if(!collected.first().embeds[0]&&!collected.first().embeds[0].url)
+                                                throw new Error("Errore nel ricevimento dell'immagine")
+                                            embed.image["url"] = collected.first().embeds[0].url
+                                        }else
+                                            embed.image["url"] = collected.first().attachments.first().url
+                                    }).catch(err => {throw err})
+                                }
+                            }).catch(err => {throw err})            
 
                             let field = {};
                             embed["fields"] = [];
@@ -210,7 +233,8 @@ client.on('messageCreate', async (message) => {
             case "removeEmbed"://low priority
                 break;
 
-            case "webhook":
+            case "testWebhook":
+                if(message.author.id!=bOwner)return
                 message.channel.createWebhook(webhooks["0"].nome, {
                     avatar:webhooks["0"].avatar
                 }).then(async (wh)=>{
@@ -229,6 +253,7 @@ client.on('messageCreate', async (message) => {
                 break;
 
             case "showWebhooks":
+                if(!message.member.permissions.has(Permissions.FLAGS.MANAGE_WEBHOOKS))throw new Error("Permesso negato (Gestione dei webhook necessario)")
                 let webList = "```";
                 let embKList = "";
                 Object.keys(webhooks).forEach(key => {
@@ -242,6 +267,7 @@ client.on('messageCreate', async (message) => {
                 break;
 
             case "sendWebhook"://high priority
+                if(!message.member.permissions.has(Permissions.FLAGS.MANAGE_WEBHOOKS))throw new Error("Permesso negato (Gestione dei webhook necessario)")
                 if(webhooks[args[0]]==undefined)throw new Error('Webhook non esistente');
                 if(args[0]=="0"&&message.author.id!=bOwner)return;
                 let webCh = await client.channels.fetch(args[1])
@@ -266,6 +292,7 @@ client.on('messageCreate', async (message) => {
                 break;
 
             case "createWebhook"://med priority
+                if(!message.member.permissions.has(Permissions.FLAGS.MANAGE_WEBHOOKS))throw new Error("Permesso negato (Gestione dei webhook necessario)")
                 let webhook={};
 
                 filter = m => m.author.id == message.author.id;
@@ -335,6 +362,8 @@ client.on('messageCreate', async (message) => {
                 break;
 
             case "createPoll"://tempo mess scelte
+                if(!message.member.permissions.has(Permissions.FLAGS.MANAGE_CHANNELS))throw new Error("Permesso negato (Gestione dei canali necessario)")
+
                 let pollTime = 0;
                 let embPoll = {};
                 let poll = {};
