@@ -7,7 +7,6 @@ const fs = require('fs');
 const ms = require('ms')
 
 const { Client, MessageAttachment, MessageEmbed, Intents, MessageActionRow, MessageButton, Permissions } = require('discord.js');
-const { setTimeout } = require('timers/promises');
 const client = new Client({intents:[Intents.FLAGS.GUILDS, Intents.FLAGS.GUILD_WEBHOOKS, Intents.FLAGS.GUILD_MESSAGES, Intents.FLAGS.GUILD_MESSAGE_REACTIONS, Intents.FLAGS.GUILD_INTEGRATIONS]});
 //require('discord-buttons')(client)
 //const {MessageButton, MessageActionRow} = require("discord-buttons")
@@ -83,21 +82,28 @@ async function sendPoll(poll, pollID){
     }, ms(poll.durata))
 }
 
-client.on('ready', ()=>{
-    console.log("Epico")
+function activityLoop(){
+    setTimeout(() => {
+        client.user.setActivity("prefix -> "+prefix+" | !help non implementato",{type:'LISTENING'})
 
-    client.user.setActivity("Avviando...",{type:'COMPETING'})
-    setInterval(() => {
-        client.user.setActivity("prefix -> "+prefix,{type:'LISTENING'})
         setTimeout(() => {
             client.user.setActivity("Mina#3690",{type:'PLAYING'})
+
             setTimeout(() => {
-                let ar = videos+music
+                let ar = videos.concat(music)
                 let rId = Math.floor(Math.random()*ar.length)
                 client.user.setActivity("yooooooo",{type:'STREAMING', url:ar[rId]})
-            }, 25000);
-        }, 25000);
-    }, 60000);
+
+                activityLoop();
+            }, 60000);
+        }, 60000);
+    }, 20000);
+}
+
+client.on('ready', ()=>{
+    console.log("Epico")
+    client.user.setActivity("Avviando...",{type:'COMPETING'})
+    activityLoop();
 })
 
 client.on('messageCreate', async (message) => {
@@ -111,6 +117,11 @@ client.on('messageCreate', async (message) => {
 
     try {
         switch(cmd){
+            case "disconnect":
+                if(message.author.id!=bOwner)return
+                client.destroy();
+                process.exit(1);
+                break;
             case "embed":
                 if(message.author.id!=bOwner)return
                 message.channel.send({embeds:[embeds['0'].embed]})
