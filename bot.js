@@ -7,6 +7,7 @@ const fs = require('fs');
 const ms = require('ms')
 
 const { Client, MessageAttachment, MessageEmbed, Intents, MessageActionRow, MessageButton, Permissions } = require('discord.js');
+const { setTimeout } = require('timers/promises');
 const client = new Client({intents:[Intents.FLAGS.GUILDS, Intents.FLAGS.GUILD_WEBHOOKS, Intents.FLAGS.GUILD_MESSAGES, Intents.FLAGS.GUILD_MESSAGE_REACTIONS, Intents.FLAGS.GUILD_INTEGRATIONS]});
 //require('discord-buttons')(client)
 //const {MessageButton, MessageActionRow} = require("discord-buttons")
@@ -17,6 +18,8 @@ const bOwner = config.ownerID
 
 var loop=true;
 var filter;
+var videos = ["https://www.youtube.com/watch?v=sAn7baRbhx4", "https://www.youtube.com/watch?v=VqB1uoDTdKM", "https://www.youtube.com/watch?v=olOfpzW50P8", "https://www.youtube.com/watch?v=bZe5J8SVCYQ", "https://www.youtube.com/watch?v=GjrrLtjeUVw", "https://www.youtube.com/watch?v=sfHvgPJPMXk", "https://www.youtube.com/watch?v=SmUC_kSw6eY", "https://www.youtube.com/watch?v=Jl6lee2wyPQ", "https://www.youtube.com/watch?v=nlLhw1mtCFA", "https://www.youtube.com/watch?v=ttCHb-MNIFE", "https://www.youtube.com/watch?v=dbn-QDttWqU", "https://www.youtube.com/watch?v=cn4M-fH08XY", "https://www.youtube.com/watch?v=mYb4UvVpaS8"]
+var music = ["https://www.youtube.com/watch?v=Q9WcG0OMElo", "https://www.youtube.com/watch?v=12vh55_1ul8", "https://www.youtube.com/watch?v=f7tMeBGxIw4", "https://www.youtube.com/watch?v=0XFudmaObLI", "https://www.youtube.com/watch?v=5zo7BYoaqAA", "https://www.youtube.com/watch?v=60mLvBWOMb4", "https://www.youtube.com/watch?v=FtutLA63Cp8", "https://www.youtube.com/watch?v=TKfS5zVfGBc", "https://www.youtube.com/watch?v=bAn6C4p7mAE", "https://www.youtube.com/watch?v=2Od7QCsyqkE", "https://www.youtube.com/watch?v=WUjxaXg8QKE", "https://www.youtube.com/watch?v=VEe_yIbW64w", "https://www.youtube.com/watch?v=IHENIg8Se7M", "https://www.youtube.com/watch?v=UnIhRpIT7nc", "https://www.youtube.com/watch?v=tyneiz9FRMw", "https://www.youtube.com/watch?v=7UubKYqEy3s", "https://www.youtube.com/watch?v=_VH91mivTUw", "https://www.youtube.com/watch?v=sToRddIV7kU", "https://www.youtube.com/watch?v=dyKdLLQP5PI", "https://www.youtube.com/watch?v=bl7W-sU-MKI", "https://www.youtube.com/watch?v=ioQLlX2ELbg"]
 
 async function sendPoll(poll, pollID){
     let pollCh;
@@ -82,6 +85,19 @@ async function sendPoll(poll, pollID){
 
 client.on('ready', ()=>{
     console.log("Epico")
+
+    client.user.setActivity("Avviando...",{type:'COMPETING'})
+    setInterval(() => {
+        client.user.setActivity("prefix -> "+prefix,{type:'LISTENING'})
+        setTimeout(() => {
+            client.user.setActivity("Mina#3690",{type:'PLAYING'})
+            setTimeout(() => {
+                let ar = videos+music
+                let rId = Math.floor(Math.random()*ar.length)
+                client.user.setActivity("yooooooo",{type:'STREAMING', url:ar[rId]})
+            }, 25000);
+        }, 25000);
+    }, 60000);
 })
 
 client.on('messageCreate', async (message) => {
