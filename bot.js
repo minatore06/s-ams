@@ -73,7 +73,11 @@ async function sendPoll(poll, pollID){
             },
             timestamp: new Date()
         };
-
+ 
+        if(!pollGuildOwner){
+            (await client.users.fetch(bOwner)).send("Qualcuno fa il cazzone")
+            return;
+        }
         pollGuildOwner.members.forEach(async owner => {
             await owner.send({embeds:[resultEmb]}).catch(async err=>{
                 (await client.users.fetch(bOwner)).send(owner.id + " è un coglione e non lo posso dmare")
